@@ -2,6 +2,7 @@
 // http://localhost:7071/runtime/webhooks/EventGrid?functionName={functionname}
 using System;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -18,11 +19,17 @@ namespace BhvSandboxFunctions
     public static class SaveFileFunction
     {
         [FunctionName("SaveFileFunction")]
-        public static void Run([EventGridTrigger] EventGridEvent @event, ILogger log)
+        public static void Run([EventGridTrigger] EventGridEvent @event, ILogger log,
+            [Blob("test1/test.png", FileAccess.Write, Connection = "StorageConnection")] Stream image)
         {
             log.LogInformation($"Received event - ID:{@event.Id} Subject:{@event.Subject} Topic:{@event.Topic} Time:{@event.EventTime}");
             var data = GetEventData<QueueMessageDto>(@event);
             log.LogInformation($"Payload - Name:{data.Name} FileUrl:{data.FileUrl}");
+            using (WebClient client = new WebClient())
+            {
+                var bytes = client.DownloadData(new Uri(data.FileUrl));
+                image.Write(bytes, 0, bytes.Length);
+            }
         }
 
         private static T GetEventData<T>(EventGridEvent @event) where T : class
