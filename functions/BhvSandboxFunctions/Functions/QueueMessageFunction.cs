@@ -22,29 +22,30 @@ namespace BhvSandboxFunctions
         {
             log.LogInformation("QueueMessageFunction processed a request.");
 
-            if (input.Images.Count > 0)
+            if (input.Images.Count == 0)
+                return new OkObjectResult("Skipped function call since there are no image urls");
+
+
+            foreach (var url in input.Images)
             {
-                var message = new QueueMessageDto
-                {
-                    Name = "Test 1",
-                    FileUrl = "test url"
-                };
                 var e = new EventGridEvent
                 {
-                    Id = "my id",
-                    EventType = "my type",
-                    Subject = "my subject",
-                    Data = message,
+                    Id = Guid.NewGuid().ToString(),
+                    EventType = "PhotoUpload",
+                    Subject = "UploadFromWeb",
                     DataVersion = "1.0"
+                };
+                e.Data = new QueueMessageDto
+                {
+                    Name = e.Id,
+                    FileUrl = url
                 };
 
                 await eventCollector.AddAsync(e);
-                return new OkObjectResult($"Added {input.Images.Count} images to queue");
+                log.LogInformation($"Added event {e.Id}: {(e.Data as QueueMessageDto).FileUrl}");
             }
-            else
-            {
-                return new OkObjectResult("Skipped function call since there are no image urls");
-            }
+
+            return new OkObjectResult($"Added {input.Images.Count} images to queue");
         }
     }
 }
