@@ -51,9 +51,10 @@ namespace SandboxApi.Controllers
             return await _carRepository.GetItemsAsync();
         }
 
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpDelete("cars/{carId}")]
+        public async Task Delete(string carId)
         {
+            await _carRepository.DeleteItemAsync(carId);
         }
     }
 }

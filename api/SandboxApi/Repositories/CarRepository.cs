@@ -56,7 +56,7 @@ namespace SandboxApi.Repositories
 
         public async Task DeleteItemAsync(string id)
         {
-            throw new NotImplementedException();
+            var response = await _container.DeleteItemAsync<CarDto>(id, new PartitionKey(id));
         }
     }
 }
